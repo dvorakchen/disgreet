@@ -294,6 +294,9 @@ impl<'a> UI<'a> {
     }
 
     pub(crate) fn handle_input(&mut self, key: KeyCode) {
+        if self.handling {
+            return;
+        }
         match self.focus {
             Focus::Session => match key {
                 KeyCode::Left => {
@@ -319,10 +322,15 @@ impl<'a> UI<'a> {
 
     /// Returns `true` if authentication succeeded and the session should be launched.
     pub(crate) fn handle_enter(&mut self) -> bool {
+        if self.handling {
+            return false;
+        }
+
+        self.handling = true;
         let username: &str = &(self.username.clone());
         let password: &str = &(self.password.clone());
         let session = self.current_session().unwrap();
-        match authenticate(username, password, session) {
+        let res = match authenticate(username, password, session) {
             Ok(()) => {
                 debug!("auth success, exiting event loop to launch session");
                 _ = fs::write(PREVIOUS_USERNAME_FILE, username);
@@ -333,7 +341,10 @@ impl<'a> UI<'a> {
                 error!("authenticate failed: {:?}", e);
                 false
             }
-        }
+        };
+
+        self.handling = false;
+        res
     }
 }
 

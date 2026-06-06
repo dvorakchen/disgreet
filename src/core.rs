@@ -23,14 +23,34 @@ pub(crate) fn authenticate(
 
     let mut client = UnixStream::connect(sock_path)?;
 
+    let res = login(&mut client, username, password, session);
+
+    if res.is_err() {
+        _ = send_msg(
+            &mut client,
+            &json!({
+                "type": "cancel_session"
+            }),
+        );
+    }
+
+    res
+}
+
+fn login(
+    client: &mut UnixStream,
+    username: &str,
+    password: &str,
+    session: &Session,
+) -> anyhow::Result<()> {
     let msg = json!({
         "type": "create_session",
         "username": username
     });
-    send_msg(&mut client, &msg)?;
+    send_msg(client, &msg)?;
     debug!("sent create_session: {:?}", msg);
 
-    let resp = recv_msg(&mut client)?;
+    let resp = recv_msg(client)?;
     debug!("response: {:?}", resp);
 
     let msg_type = resp["type"].as_str().unwrap_or("");
@@ -46,9 +66,9 @@ pub(crate) fn authenticate(
     });
 
     debug!("send post_auth_message_response: {:?}", msg);
-    send_msg(&mut client, &msg)?;
+    send_msg(client, &msg)?;
 
-    let resp = recv_msg(&mut client)?;
+    let resp = recv_msg(client)?;
     debug!("response: {:?}", resp);
 
     let msg_type = resp["type"].as_str().unwrap_or("");
@@ -67,7 +87,7 @@ pub(crate) fn authenticate(
         "cmd": cmd
     });
     debug!("send start_session: {:?}", msg);
-    send_msg(&mut client, &msg)?;
+    send_msg(client, &msg)?;
 
     Ok(())
 }
