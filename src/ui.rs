@@ -56,53 +56,61 @@ impl<'a> UI<'a> {
 
         let mut render_img: Option<image::DynamicImage> = None;
 
-        if let Ok(path) = PathBuf::from_str(background)
-            && path.exists()
-            && path.is_file()
-        {
-            let file_name = path
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string();
+        match PathBuf::from_str(background) {
+            Ok(path) => {
+                if path.exists() && path.is_file() {
+                    let file_name = path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .to_string();
 
-            if render_img.is_none() {
-                let cache_file = format!(
-                    "{}/{}_{}x{}.bin",
-                    CACHE_BG_DIR, file_name, size.width, size.height
-                );
-                debug!("check cache file: {cache_file}");
+                    if render_img.is_none() {
+                        let cache_file = format!(
+                            "{}/{}_{}x{}.bin",
+                            CACHE_BG_DIR, file_name, size.width, size.height
+                        );
+                        debug!("check cache file: {cache_file}");
 
-                render_img = if let Ok(path) = PathBuf::from_str(&cache_file)
-                    && path.exists()
-                    && let Ok(raw_bytes) = fs::read(&path)
-                    && let Some(rgb_buf) =
-                        RgbImage::from_raw(size.width as u32, size.height as u32, raw_bytes)
-                {
-                    debug!("cache file exists");
-                    Some(DynamicImage::ImageRgb8(rgb_buf))
-                } else {
-                    debug!("has no cache");
+                        let cache_path = PathBuf::from_str(&cache_file).unwrap();
+                        if cache_path.exists() {
+                            if let Ok(raw_bytes) = fs::read(&cache_path) {
+                                if let Some(rgb_buf) = RgbImage::from_raw(
+                                    size.width as u32,
+                                    size.height as u32,
+                                    raw_bytes,
+                                ) {
+                                    debug!("cache file exists");
+                                    render_img = Some(DynamicImage::ImageRgb8(rgb_buf));
+                                }
+                            }
+                        }
 
-                    let base_img = image::ImageReader::open(path)
-                        .unwrap()
-                        .with_guessed_format()
-                        .unwrap()
-                        .decode()
-                        .unwrap();
-                    let resized_img = base_img.resize_exact(
-                        size.width as u32,
-                        size.height as u32,
-                        image::imageops::FilterType::Nearest,
-                    );
-                    let rgb8 = resized_img.to_rgb8();
-                    _ = fs::write(&cache_file, rgb8.as_raw());
-                    debug!("cache new file");
-                    Some(resized_img)
-                };
+                        if render_img.is_none() {
+                            debug!("has no cache");
+
+                            let base_img = image::ImageReader::open(path)
+                                .unwrap()
+                                .with_guessed_format()
+                                .unwrap()
+                                .decode()
+                                .unwrap();
+                            let resized_img = base_img.resize_exact(
+                                size.width as u32,
+                                size.height as u32,
+                                image::imageops::FilterType::Nearest,
+                            );
+                            let rgb8 = resized_img.to_rgb8();
+                            _ = fs::write(&cache_file, rgb8.as_raw());
+                            debug!("cache new file");
+                            render_img = Some(resized_img);
+                        }
+                    }
+                }
             }
-        } else {
-            debug!("base_img is none, not draw background");
+            Err(_) => {
+                debug!("base_img is none, not draw background");
+            }
         }
 
         Self {
@@ -273,7 +281,7 @@ impl<'a> UI<'a> {
     }
 }
 
-impl<'a> UI<'a> {
+impl UI<'_> {
     pub(crate) fn next_focus(&mut self) {
         self.focus = match self.focus {
             Focus::Session => Focus::Username,

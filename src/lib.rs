@@ -139,11 +139,7 @@ fn run_app<B: Backend>(
 }
 
 fn append_bash_session(sessions: &mut Vec<Session>) {
-    if sessions
-        .iter()
-        .find(|&s| s.name.to_lowercase() == "bash")
-        .is_none()
-    {
+    if !sessions.iter().any(|s| s.name.to_lowercase() == "bash") {
         sessions.push(Session {
             name: "bash".to_string(),
             exec: "/usr/bin/bash".to_string(),
@@ -153,18 +149,18 @@ fn append_bash_session(sessions: &mut Vec<Session>) {
 
 fn find_desktop_files(path: &Path) -> Vec<Session> {
     let mut sessions = vec![];
-    if path.is_dir()
-        && let Ok(entries) = fs::read_dir(path)
-    {
+    if let (true, Ok(entries)) = (path.is_dir(), fs::read_dir(path)) {
         for entry in entries.flatten() {
             let file_path = entry.path();
 
-            if file_path.is_file()
-                && let Some(ext) = file_path.extension()
-                && ext == "desktop"
-                && let Ok(session) = parser_desktop_file(&file_path)
-            {
-                sessions.push(session);
+            if file_path.is_file() {
+                if let Some(ext) = file_path.extension() {
+                    if ext == "desktop" {
+                        if let Ok(session) = parser_desktop_file(&file_path) {
+                            sessions.push(session);
+                        }
+                    }
+                }
             }
         }
     }
@@ -198,6 +194,6 @@ struct Session {
 
 #[derive(Debug, Error)]
 enum DesktopFile {
-    #[error("")]
+    #[error("Desktop Entry section not exists")]
     NotExist,
 }
