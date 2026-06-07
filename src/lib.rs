@@ -23,7 +23,7 @@ use thiserror::Error;
 mod core;
 mod ui;
 
-rust_i18n::i18n!("locales", fallback = "en_us");
+// i18n
 
 pub(crate) const CACHE_BG_DIR: &str = "/var/cache/disgreet/";
 pub(crate) const DEFAULT_LOG_PATH: &str = "/var/log/disgreet/disgreet.log";
@@ -31,15 +31,13 @@ const DESKTOP_FILE_PATH: &str = "/usr/share/wayland-sessions/";
 pub(crate) const PREVIOUS_USERNAME_FILE: &str = "/var/cache/disgreet/previous_username";
 
 pub struct Disgreet {
-    lang: String,
     background: String,
     sessions: Vec<Session>,
     prev_username: String,
 }
 impl Disgreet {
-    pub fn new(lang: &str, background: &str) -> Self {
+    pub fn new(background: &str) -> Self {
         Self {
-            lang: lang.to_string(),
             background: background.into(),
             sessions: vec![],
             prev_username: String::new(),
@@ -65,12 +63,8 @@ impl Disgreet {
             )]);
         }
 
-        debug!(
-            "new disgreet: \n{{ lang: {}, background: {} }}",
-            self.lang, self.background,
-        );
+        debug!("new disgreet: \n{{ background: {} }}", self.background,);
         debug!("setup disgreet");
-        rust_i18n::set_locale(&self.lang);
 
         if !Path::new(DESKTOP_FILE_PATH).exists() {
             warn!("path {} not exists", DESKTOP_FILE_PATH);

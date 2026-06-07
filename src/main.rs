@@ -1,5 +1,3 @@
-use std::env;
-
 use clap::Parser;
 use disgreet::Disgreet;
 
@@ -12,13 +10,8 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    let lang = env::var("LANG")
-        .unwrap_or("en-us".to_string())
-        .to_lowercase();
-    let lang = lang.split('.').next().unwrap_or_default();
-
     let args = Args::parse();
-    Disgreet::new(lang, &args.background).run()?;
+    Disgreet::new(&args.background).run()?;
 
     Ok(())
 }

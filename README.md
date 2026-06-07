@@ -81,25 +81,6 @@ command = "cage -s -- alacritty -e /usr/local/bin/disgreet -b path/to/your/image
 user = "_greetd"
 ```
 
-## Internationalization
-
-Set the `LANG` environment variable to switch languages. Defaults to English.
-
-```bash
-# English (default)
-disgreet
-
-# Chinese
-LANG=zh-cn disgreet -b /etc/greetd/background.png
-```
-
-### Supported languages
-
-| Locale  | Language            |
-| ------- | ------------------- |
-| `en-us` | English *(default)* |
-| `zh-cn` | Simplified Chinese  |
-
 ## License
 
 [Apache 2.0](LICENSE)

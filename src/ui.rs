@@ -12,7 +12,6 @@ use ratatui::{
     text::Span,
     widgets::{Block, Borders, Padding, Paragraph},
 };
-use rust_i18n::t;
 
 use crate::{CACHE_BG_DIR, PREVIOUS_USERNAME_FILE, Session, core::authenticate};
 
@@ -209,7 +208,7 @@ impl<'a> UI<'a> {
         } else {
             Style::default().fg(Color::Gray)
         };
-        let user_text = format!("{}: {}", t!("username"), self.username);
+        let user_text = format!("{}: {}", "Username", self.username);
         f.render_widget(Paragraph::new(user_text.clone()).style(user_style), rows[2]);
         // cursor posinion
         if self.focus == Focus::Username {
@@ -224,7 +223,7 @@ impl<'a> UI<'a> {
         } else {
             Style::default().fg(Color::Gray)
         };
-        let pass_text = format!("{}: ", t!("password"),);
+        let pass_text = format!("{}: ", "Password",);
         if self.focus == Focus::Password {
             let x = rows[4].x + pass_text.len() as u16;
             let y = rows[4].y;
